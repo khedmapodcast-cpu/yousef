@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>محاكاة واجهة شاومي - بدون حواف</title>
+    <title>محاكاة واجهة شاومي - تحريك النوافذ</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     
@@ -26,14 +26,12 @@
             min-height: 100vh; 
         }
 
-        /* تم إزالة border و border-radius الإطار الخارجي */
         .phone-frame {
             width: var(--phone-width);
             height: var(--phone-height);
             background: var(--bg-ui) center/cover;
             position: relative;
             overflow: hidden;
-            /* تم إلغاء الحواف هنا */
             border: none;
             border-radius: 0;
             box-shadow: 0 0 30px rgba(0,0,0,0.5);
@@ -76,6 +74,7 @@
         .drag-handle {
             width: 50px; height: 6px; background: rgba(255,255,255,0.8);
             border-radius: 10px; margin: 0 auto 15px; cursor: grab;
+            transition: opacity 0.5s;
         }
 
         .ussd-box {
@@ -102,10 +101,23 @@
         .btn-send { background: #0078d4; color: white; }
         .btn-cancel { background: #f0f0f0; color: #333; }
 
+        /* تعديلات شريط التنقل ليدعم التحريك */
+        .nav-bar-container {
+            position: absolute; bottom: 12px; width: 100%;
+            display: flex; flex-direction: column; align-items: center;
+            z-index: 2000;
+        }
+
         .nav-bar { 
-            position: absolute; bottom: 12px; width: 100%; 
+            width: 100%;
             display: flex; justify-content: space-around; 
             color: white; opacity: 0.9; font-size: 16px; 
+        }
+
+        .nav-drag-handle {
+            width: 40px; height: 4px; background: rgba(255,255,255,0.6);
+            border-radius: 10px; margin-bottom: 8px; cursor: grab;
+            opacity: 0; transition: opacity 0.5s;
         }
     </style>
 </head>
@@ -160,48 +172,66 @@
         </div>
     </div>
 
-    <div class="nav-bar">
-        <i class="fas fa-stop"></i>
-        <i class="far fa-circle"></i>
-        <i class="fas fa-chevron-left"></i>
+    <div class="nav-bar-container" id="navContainer">
+        <div class="nav-drag-handle" id="navDragBtn"></div>
+        <div class="nav-bar">
+            <i class="fas fa-stop"></i>
+            <i class="far fa-circle"></i>
+            <i class="fas fa-chevron-left"></i>
+        </div>
     </div>
 </div>
 
 <script>
-    const dragBtn = document.getElementById('dragBtn');
-    const container = document.getElementById('ussdContainer');
-    let isDragging = false;
-    let startY;
-    let initialTranslateY = 0;
-    let currentTranslateY = 0;
+    // وظيفة التحريك العامة
+    function setupDraggable(btnId, containerId) {
+        const btn = document.getElementById(btnId);
+        const container = document.getElementById(containerId);
+        let isDragging = false;
+        let startY, initialTranslateY = 0, currentTranslateY = 0;
+        let hideTimeout;
 
-    dragBtn.addEventListener('mousedown', dragStart);
-    dragBtn.addEventListener('touchstart', dragStart, {passive: false});
-    window.addEventListener('mousemove', dragMove);
-    window.addEventListener('touchmove', dragMove, {passive: false});
-    window.addEventListener('mouseup', dragEnd);
-    window.addEventListener('touchend', dragEnd);
+        function showHandle() {
+            clearTimeout(hideTimeout);
+            btn.style.opacity = '1';
+        }
 
-    function dragStart(e) {
-        isDragging = true;
-        startY = (e.type === 'touchstart') ? e.touches[0].clientY : e.clientY;
+        function startHideTimer() {
+            hideTimeout = setTimeout(() => {
+                if (!isDragging) btn.style.opacity = '0';
+            }, 1500);
+        }
+
+        btn.addEventListener('mousedown', (e) => { isDragging = true; startY = e.clientY; showHandle(); });
+        btn.addEventListener('touchstart', (e) => { isDragging = true; startY = e.touches[0].clientY; showHandle(); }, {passive: false});
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const deltaY = e.clientY - startY;
+            currentTranslateY = initialTranslateY + deltaY;
+            container.style.transform = `translateY(${currentTranslateY}px)`;
+        });
+
+        window.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            const deltaY = e.touches[0].clientY - startY;
+            currentTranslateY = initialTranslateY + deltaY;
+            container.style.transform = `translateY(${currentTranslateY}px)`;
+            e.preventDefault();
+        }, {passive: false});
+
+        window.addEventListener('mouseup', () => { if (isDragging) { isDragging = false; initialTranslateY = currentTranslateY; startHideTimer(); } });
+        window.addEventListener('touchend', () => { if (isDragging) { isDragging = false; initialTranslateY = currentTranslateY; startHideTimer(); } });
+
+        container.addEventListener('mouseenter', showHandle);
+        container.addEventListener('mouseleave', startHideTimer);
+        container.addEventListener('touchstart', showHandle);
     }
 
-    function dragMove(e) {
-        if (!isDragging) return;
-        const clientY = (e.type === 'touchmove') ? e.touches[0].clientY : e.clientY;
-        const deltaY = clientY - startY;
-        currentTranslateY = initialTranslateY + deltaY;
-        if (currentTranslateY > 50) currentTranslateY = 50; 
-        if (currentTranslateY < -700) currentTranslateY = -700;
-        container.style.transform = `translateY(${currentTranslateY}px)`;
-        e.preventDefault();
-    }
-
-    function dragEnd() {
-        isDragging = false;
-        initialTranslateY = currentTranslateY;
-    }
+    // تفعيل التحريك للمربع المنبثق
+    setupDraggable('dragBtn', 'ussdContainer');
+    // تفعيل التحريك لشريط التنقل
+    setupDraggable('navDragBtn', 'navContainer');
 </script>
 
 </body>
