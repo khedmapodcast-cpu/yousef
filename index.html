@@ -11,9 +11,9 @@
         :root {
             --bg-ui: url('https://picsum.photos/seed/girl2026_1/900/1600');
             --system-font: 'Cairo', sans-serif;
-            --clock-font: 'Tajawal', sans-serif; /* الخط العربي المشهور للساعة */
-            --miui-radius: 22px;
-            /* تعديل الحجم لمحاكاة شاشة 6.78 بوصة */
+            --clock-font: 'Tajawal', sans-serif;
+            --miui-radius: 22px; /* هذا خاص بأيقونات التطبيقات، لا نغيره */
+            /* أبعاد شاشة 6.78 بوصة */
             --phone-width: 420px; 
             --phone-height: 933px; 
         }
@@ -38,7 +38,7 @@
             border: none;
             box-shadow: 0 0 30px rgba(0,0,0,0.5);
             transition: background-image 0.8s ease-in-out;
-            border-radius: 40px; /* إضافة انحناء لإطار الهاتف الخارجي */
+            border-radius: 0; /* تم جعل الحواف مربعة تماماً (بدون انحناء) */
         }
 
         /* --- شريط الحالة MIUI --- */
@@ -54,7 +54,7 @@
             font-weight: 700; 
             font-size: 16px; 
             letter-spacing: 0.5px; 
-            font-family: var(--clock-font); /* تطبيق الخط العربي المشهور */
+            font-family: var(--clock-font);
         }
 
         .status-right { display: flex; align-items: center; gap: 8px; }
