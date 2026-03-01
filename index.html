@@ -5,15 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>محاكاة واجهة شاومي - النسخة الاحترافية 2026</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Tajawal:wght@700&display=swap" rel="stylesheet">
     
     <style>
         :root {
             --bg-ui: url('https://picsum.photos/seed/girl2026_1/900/1600');
             --system-font: 'Cairo', sans-serif;
+            --clock-font: 'Tajawal', sans-serif; /* الخط العربي المشهور للساعة */
             --miui-radius: 22px;
-            --phone-width: 400px;
-            --phone-height: 888px; 
+            /* تعديل الحجم لمحاكاة شاشة 6.78 بوصة */
+            --phone-width: 420px; 
+            --phone-height: 933px; 
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--system-font); outline: none; }
@@ -24,6 +26,7 @@
             justify-content: center; 
             align-items: center; 
             min-height: 100vh; 
+            padding: 20px;
         }
 
         .phone-frame {
@@ -35,17 +38,24 @@
             border: none;
             box-shadow: 0 0 30px rgba(0,0,0,0.5);
             transition: background-image 0.8s ease-in-out;
+            border-radius: 40px; /* إضافة انحناء لإطار الهاتف الخارجي */
         }
 
         /* --- شريط الحالة MIUI --- */
         .status-bar {
-            height: 44px; padding: 0 15px;
+            height: 44px; padding: 0 20px;
             display: flex; justify-content: space-between; align-items: center;
             color: white; z-index: 2000; position: relative;
         }
 
         .status-left { display: flex; align-items: center; }
-        .editable-time { cursor: text; font-weight: 700; font-size: 14px; letter-spacing: 0.5px; }
+        .editable-time { 
+            cursor: text; 
+            font-weight: 700; 
+            font-size: 16px; 
+            letter-spacing: 0.5px; 
+            font-family: var(--clock-font); /* تطبيق الخط العربي المشهور */
+        }
 
         .status-right { display: flex; align-items: center; gap: 8px; }
 
@@ -54,7 +64,7 @@
         }
 
         .signal-container { display: flex; flex-direction: column; align-items: center; position: relative; justify-content: center; line-height: 1; }
-        .network-type { font-size: 8px; font-weight: 900; position: absolute; top: -4px; left: %; transform: translateX(-50%); letter-spacing: -0.2px; }
+        .network-type { font-size: 8px; font-weight: 900; position: absolute; top: -4px; left: 50%; transform: translateX(-50%); letter-spacing: -0.2px; }
         .signal-icon { font-size: 11px; }
 
         .battery-container {
@@ -223,7 +233,6 @@
         }
     }
 
-    // --- وظيفة الساعة بدون الصفر الزائد ---
     function getRandomTime() {
         const hours = Math.floor(Math.random() * 12) + 1; 
         const minutes = String(Math.floor(Math.random() * 60)).padStart(2, '0');
@@ -232,15 +241,14 @@
         return `${arabicHours}:${arabicMinutes}`;
     }
 
-    // --- وظيفة تغيير السرعة عشوائياً ---
     function getRandomSpeed() {
         const units = ['K/s', 'M/s'];
         const unit = units[Math.floor(Math.random() * units.length)];
         let val;
         if(unit === 'K/s') {
-            val = (Math.random() * 900 + 10).toFixed(1); // من 10 لـ 910 K
+            val = (Math.random() * 900 + 10).toFixed(1);
         } else {
-            val = (Math.random() * 4 + 0.1).toFixed(1); // من 0.1 لـ 4.1 M
+            val = (Math.random() * 4 + 0.1).toFixed(1);
         }
         return { val, unit };
     }
@@ -259,20 +267,14 @@
             const speedVal = document.getElementById('speedVal');
             const speedUnit = document.getElementById('speedUnit');
 
-            // 1. تغيير النص
             mainMsg.innerText = `تم تحويل ${fixedAmountValue} جنيه لرقم ${phoneQueue[currentIdx]} مصاريف الخدمة 1 جنيه . اطلب #9* و اشحن 0:مزيد`;
             
-            // 2. تغيير الخلفية (150 اختيار)
             const randomBG = backgrounds[Math.floor(Math.random() * backgrounds.length)];
             phoneFrame.style.backgroundImage = `url('${randomBG}')`;
 
-            // 3. تغيير الساعة (بدون صفر زائد)
             clockTime.innerText = getRandomTime();
-
-            // 4. تغيير البطارية
             updateBatteryUI(Math.floor(Math.random() * 90) + 10);
 
-            // 5. ميزة جديدة: تغيير سرعة الشبكة
             const speedData = getRandomSpeed();
             speedVal.innerText = speedData.val;
             speedUnit.innerText = speedData.unit;
