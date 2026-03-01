@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>محاكاة واجهة شاومي - تحريك النوافذ</title>
+    <title>محاكاة واجهة شاومي - النسخة الاحترافية 2026</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --bg-ui: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1000');
+            --bg-ui: url('https://picsum.photos/seed/girl2026_1/900/1600');
             --system-font: 'Cairo', sans-serif;
             --miui-radius: 22px;
             --phone-width: 400px;
@@ -33,104 +33,85 @@
             position: relative;
             overflow: hidden;
             border: none;
-            border-radius: 0;
             box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            transition: background-image 0.8s ease-in-out;
         }
 
+        /* --- شريط الحالة MIUI --- */
         .status-bar {
-            height: 44px; padding: 0 25px;
+            height: 44px; padding: 0 15px;
             display: flex; justify-content: space-between; align-items: center;
-            color: white; z-index: 2000; position: relative; font-size: 14px;
+            color: white; z-index: 2000; position: relative;
         }
 
-        .editable-time { cursor: text; font-weight: 700; }
+        .status-left { display: flex; align-items: center; }
+        .editable-time { cursor: text; font-weight: 700; font-size: 14px; letter-spacing: 0.5px; }
+
         .status-right { display: flex; align-items: center; gap: 8px; }
 
-        .app-grid {
-            display: grid; grid-template-columns: repeat(4, 1fr);
-            gap: 15px; padding: 20px; margin-top: 20px;
+        .network-speed {
+            font-size: 10px; font-weight: 600; direction: ltr; display: flex; gap: 1px; opacity: 0.95; cursor: text; margin-left: -5px;
         }
 
+        .signal-container { display: flex; flex-direction: column; align-items: center; position: relative; justify-content: center; line-height: 1; }
+        .network-type { font-size: 8px; font-weight: 900; position: absolute; top: -4px; left: %; transform: translateX(-50%); letter-spacing: -0.2px; }
+        .signal-icon { font-size: 11px; }
+
+        .battery-container {
+            position: relative; width: 28px; height: 13px; border: 1.2px solid rgba(255, 255, 255, 0.8);
+            border-radius: 3.5px; display: flex; align-items: center; justify-content: center; padding: 1px;
+        }
+        .battery-container::after { content: ''; position: absolute; right: -3.5px; top: 3.5px; width: 2.5px; height: 4.5px; background: rgba(255, 255, 255, 0.8); border-radius: 0 1.5px 1.5px 0; }
+        .battery-level { position: absolute; left: 1.5px; top: 1.5px; bottom: 1.5px; background: #fff; border-radius: 1.5px; z-index: 1; }
+        .battery-percentage { position: relative; z-index: 2; font-size: 8.5px; font-weight: 900; color: #000; line-height: 1; transform: scale(0.9); }
+
+        /* --- التطبيقات --- */
+        .app-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; padding: 20px; margin-top: 20px; }
         .app-item { display: flex; flex-direction: column; align-items: center; margin-bottom: 15px; }
+        .icon-box { width: 62px; height: 62px; border-radius: var(--miui-radius); margin-bottom: 8px; display: flex; justify-content: center; align-items: center; font-size: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .app-name { color: white; font-size: 12px; text-align: center; font-weight: 600; pointer-events: none; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
 
-        .icon-box {
-            width: 62px; height: 62px; border-radius: var(--miui-radius);
-            margin-bottom: 8px; display: flex; justify-content: center; align-items: center;
-            font-size: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-        }
-
-        .app-name { color: white; font-size: 12px; text-align: center; font-weight: 600; pointer-events: none; }
-
-        .overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.4); display: flex; align-items: flex-end;
-            padding-bottom: 80px; z-index: 1500;
-        }
-
-        .ussd-container {
-            width: 90%; margin: 0 auto; position: relative;
-        }
-
-        .drag-handle {
-            width: 50px; height: 6px; background: rgba(255,255,255,0.8);
-            border-radius: 10px; margin: 0 auto 15px; cursor: grab;
-            transition: opacity 0.5s;
-        }
-
-        .ussd-box {
-            background: rgba(255, 255, 255, 0.96); border-radius: 32px;
-            padding: 28px; text-align: right; box-shadow: 0 -5px 30px rgba(0,0,0,0.3);
-            backdrop-filter: blur(10px);
-        }
-
-        .header-row { 
-            display: flex; justify-content: center; align-items: center; 
-            gap: 10px; margin-bottom: 18px; font-weight: 700; font-size: 18px; 
-        }
-        
+        /* --- المربع المنبثق --- */
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); display: flex; align-items: flex-end; padding-bottom: 80px; z-index: 1500; }
+        .ussd-container { width: 90%; margin: 0 auto; position: relative; }
+        .drag-handle { width: 50px; height: 6px; background: rgba(255,255,255,0.8); border-radius: 10px; margin: 0 auto 15px; cursor: grab; }
+        .ussd-box { background: rgba(255, 255, 255, 0.96); border-radius: 32px; padding: 28px; text-align: right; box-shadow: 0 -5px 30px rgba(0,0,0,0.3); backdrop-filter: blur(10px); }
+        .header-row { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 18px; font-weight: 700; font-size: 18px; }
         .sim-tag { background: #e0e0e0; padding: 2px 10px; border-radius: 8px; font-size: 13px; }
-
-        .msg-text { font-size: 16px; line-height: 1.8; margin-bottom: 25px; color: #111; }
-        .input-line { 
-            width: 100%; height: 52px; border: 2px solid #0078d4; 
-            border-radius: 15px; margin-bottom: 20px; padding: 12px; font-size: 18px; 
-        }
-
+        .msg-text { font-size: 16px; line-height: 1.8; margin-bottom: 25px; color: #111; word-wrap: break-word; }
+        .input-line { width: 100%; height: 52px; border: 2px solid #0078d4; border-radius: 15px; margin-bottom: 20px; padding: 12px; font-size: 18px; }
         .btn-row { display: flex; gap: 12px; }
         .btn { flex: 1; padding: 16px; border-radius: 18px; border: none; font-weight: 700; font-size: 17px; cursor: pointer; }
         .btn-send { background: #0078d4; color: white; }
         .btn-cancel { background: #f0f0f0; color: #333; }
 
-        /* تعديلات شريط التنقل ليدعم التحريك */
-        .nav-bar-container {
-            position: absolute; bottom: 12px; width: 100%;
-            display: flex; flex-direction: column; align-items: center;
-            z-index: 2000;
-        }
+        /* --- لوحة تحكم الأرقام المخفية --- */
+        #bulkSettings { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; background: white; border-radius: 25px; padding: 20px; z-index: 4000; display: none; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        #bulkSettings h3 { margin-bottom: 15px; font-size: 18px; color: #333; text-align: center; }
+        #bulkSettings textarea { width: 100%; height: 120px; border: 1px solid #ddd; border-radius: 10px; padding: 10px; resize: none; margin-bottom: 10px; font-size: 14px; }
+        #bulkSettings input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 10px; margin-bottom: 15px; }
+        .settings-trigger { position: absolute; top: 10px; right: 10px; width: 30px; height: 30px; z-index: 3000; cursor: pointer; opacity: 0; }
 
-        .nav-bar { 
-            width: 100%;
-            display: flex; justify-content: space-around; 
-            color: white; opacity: 0.9; font-size: 16px; 
-        }
-
-        .nav-drag-handle {
-            width: 40px; height: 4px; background: rgba(255,255,255,0.6);
-            border-radius: 10px; margin-bottom: 8px; cursor: grab;
-            opacity: 0; transition: opacity 0.5s;
-        }
+        /* --- شريط التنقل --- */
+        .nav-bar-container { position: absolute; bottom: 12px; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 2000; }
+        .nav-bar { width: 100%; display: flex; justify-content: space-around; color: white; opacity: 0.9; font-size: 16px; }
+        .nav-drag-handle { width: 40px; height: 4px; background: rgba(255,255,255,0.6); border-radius: 10px; margin-bottom: 8px; cursor: grab; opacity: 0; transition: opacity 0.5s; }
     </style>
 </head>
 <body>
 
-<div class="phone-frame">
+<div class="phone-frame" id="phoneFrame">
+    <div class="settings-trigger" onclick="toggleSettings()"></div>
+
     <div class="status-bar">
-        <div class="editable-time" contenteditable="true">١٢:٥٩</div>
+        <div class="status-left"><div class="editable-time" id="clockTime" contenteditable="true">١٢:٥٩</div></div>
         <div class="status-right">
-            <i class="fas fa-signal"></i>
-            <i class="fas fa-wifi"></i>
-            <span contenteditable="true">22%</span>
-            <i class="fas fa-battery-full"></i>
+            <div class="network-speed"><span id="speedVal" contenteditable="true">1.5</span><span id="speedUnit">M/s</span></div>
+            <div class="signal-container"><span class="network-type" contenteditable="true">5G</span><i class="fas fa-signal signal-icon"></i></div>
+            <div class="battery-container">
+                <div class="battery-level" id="batLevel" style="width: 90%;"></div>
+                <div class="battery-percentage" id="batText" contenteditable="true">90</div>
+            </div>
         </div>
     </div>
 
@@ -142,11 +123,14 @@
         <div class="app-item"><div class="icon-box" style="background: #fff;"><img src="https://cdn-icons-png.flaticon.com/512/2991/2991148.png" width="35"></div><div class="app-name">جوجل</div></div>
         <div class="app-item"><div class="icon-box" style="background: #000;"><i class="fab fa-tiktok" style="color:white"></i></div><div class="app-name">تيك توك</div></div>
         <div class="app-item"><div class="icon-box" style="background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);"><i class="fab fa-instagram" style="color:white"></i></div><div class="app-name">إنستجرام</div></div>
-        <div class="app-item"><div class="icon-box" style="background: #1da1f2;"><i class="fab fa-twitter" style="color:white"></i></div><div class="app-name">تويتر</div></div>
-        <div class="app-item"><div class="icon-box" style="background: #ff9800;"><i class="fas fa-folder-open" style="color:white"></i></div><div class="app-name">الملفات</div></div>
         <div class="app-item"><div class="icon-box" style="background: #4caf50;"><i class="fas fa-phone" style="color:white"></i></div><div class="app-name">الهاتف</div></div>
-        <div class="app-item"><div class="icon-box" style="background: #03a9f4;"><i class="fas fa-comment" style="color:white"></i></div><div class="app-name">الرسائل</div></div>
-        <div class="app-item"><div class="icon-box" style="background: #8bc34a;"><i class="fas fa-camera" style="color:white"></i></div><div class="app-name">الكاميرا</div></div>
+    </div>
+
+    <div id="bulkSettings">
+        <h3>تجهيز قائمة الإرسال</h3>
+        <textarea id="phoneList" placeholder="اكتب الأرقام هنا.. (رقم في كل سطر)"></textarea>
+        <input type="number" id="fixedAmount" placeholder="أدخل المبلغ الثابت">
+        <button class="btn btn-send" onclick="saveAndClose()">حفظ القائمة</button>
     </div>
 
     <div class="overlay" id="overlay">
@@ -154,19 +138,16 @@
             <div class="drag-handle" id="dragBtn"></div>
             <div class="ussd-box">
                 <div class="header-row">
-                    <span class="sim-tag" contenteditable="true">2</span>
+                    <span class="sim-tag" contenteditable="true">1</span>
                     <span contenteditable="true">معلومات شركة الاتصالات</span>
                 </div>
-                <div class="msg-text" contenteditable="true">
-                    تم تحويل 200 جنيه لرقم 
-                    01036543568 مصاريف الخدمة 1 
-                    جنيه . اطلب #9* و اشحن 
-                    0:مزيد
+                <div class="msg-text" id="mainMsg" contenteditable="true">
+                    تم تحويل 200 جنيه لرقم 01036543568 مصاريف الخدمة 3 جنيه . اطلب #9* و اشحن 0:مزيد 
                 </div>
                 <div class="input-line" contenteditable="true"></div>
                 <div class="btn-row">
                     <button class="btn btn-cancel" onclick="document.getElementById('overlay').style.display='none'">إلغاء</button>
-                    <button class="btn btn-send">إرسال</button>
+                    <button class="btn btn-send" onclick="handleSendClick()">إرسال</button>
                 </div>
             </div>
         </div>
@@ -174,64 +155,135 @@
 
     <div class="nav-bar-container" id="navContainer">
         <div class="nav-drag-handle" id="navDragBtn"></div>
-        <div class="nav-bar">
-            <i class="fas fa-stop"></i>
-            <i class="far fa-circle"></i>
-            <i class="fas fa-chevron-left"></i>
-        </div>
+        <div class="nav-bar"><i class="fas fa-stop"></i><i class="far fa-circle"></i><i class="fas fa-chevron-left"></i></div>
     </div>
 </div>
 
 <script>
-    // وظيفة التحريك العامة
+    // --- الوظائف الأساسية ---
     function setupDraggable(btnId, containerId) {
         const btn = document.getElementById(btnId);
         const container = document.getElementById(containerId);
-        let isDragging = false;
-        let startY, initialTranslateY = 0, currentTranslateY = 0;
+        let isDragging = false, startY, initialTranslateY = 0, currentTranslateY = 0;
         let hideTimeout;
-
-        function showHandle() {
-            clearTimeout(hideTimeout);
-            btn.style.opacity = '1';
-        }
-
-        function startHideTimer() {
-            hideTimeout = setTimeout(() => {
-                if (!isDragging) btn.style.opacity = '0';
-            }, 1500);
-        }
-
+        function showHandle() { clearTimeout(hideTimeout); btn.style.opacity = '1'; }
+        function startHideTimer() { hideTimeout = setTimeout(() => { if (!isDragging) btn.style.opacity = '0'; }, 1500); }
         btn.addEventListener('mousedown', (e) => { isDragging = true; startY = e.clientY; showHandle(); });
         btn.addEventListener('touchstart', (e) => { isDragging = true; startY = e.touches[0].clientY; showHandle(); }, {passive: false});
-
-        window.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            const deltaY = e.clientY - startY;
-            currentTranslateY = initialTranslateY + deltaY;
-            container.style.transform = `translateY(${currentTranslateY}px)`;
-        });
-
-        window.addEventListener('touchmove', (e) => {
-            if (!isDragging) return;
-            const deltaY = e.touches[0].clientY - startY;
-            currentTranslateY = initialTranslateY + deltaY;
-            container.style.transform = `translateY(${currentTranslateY}px)`;
-            e.preventDefault();
-        }, {passive: false});
-
+        window.addEventListener('mousemove', (e) => { if (!isDragging) return; currentTranslateY = initialTranslateY + (e.clientY - startY); container.style.transform = `translateY(${currentTranslateY}px)`; });
+        window.addEventListener('touchmove', (e) => { if (!isDragging) return; currentTranslateY = initialTranslateY + (e.touches[0].clientY - startY); container.style.transform = `translateY(${currentTranslateY}px)`; e.preventDefault(); }, {passive: false});
         window.addEventListener('mouseup', () => { if (isDragging) { isDragging = false; initialTranslateY = currentTranslateY; startHideTimer(); } });
         window.addEventListener('touchend', () => { if (isDragging) { isDragging = false; initialTranslateY = currentTranslateY; startHideTimer(); } });
-
         container.addEventListener('mouseenter', showHandle);
         container.addEventListener('mouseleave', startHideTimer);
-        container.addEventListener('touchstart', showHandle);
+    }
+    setupDraggable('dragBtn', 'ussdContainer');
+    setupDraggable('navDragBtn', 'navContainer');
+
+    const batText = document.getElementById('batText');
+    const batLevel = document.getElementById('batLevel');
+    
+    function updateBatteryUI(val) {
+        val = Math.min(Math.max(val, 0), 100);
+        batLevel.style.width = val + '%';
+        batText.innerText = val;
+        batText.style.color = val > 50 ? 'black' : (val < 20 ? 'red' : 'white');
     }
 
-    // تفعيل التحريك للمربع المنبثق
-    setupDraggable('dragBtn', 'ussdContainer');
-    // تفعيل التحريك لشريط التنقل
-    setupDraggable('navDragBtn', 'navContainer');
+    batText.addEventListener('input', () => {
+        let val = parseInt(batText.innerText);
+        if (!isNaN(val)) updateBatteryUI(val);
+    });
+
+    // --- مصفوفة الـ 150 خلفية ---
+    const backgrounds = [];
+    for(let i=1; i<=50; i++) backgrounds.push(`https://picsum.photos/seed/girl2026_${i}/900/1600`);
+    for(let i=1; i<=50; i++) backgrounds.push(`https://picsum.photos/seed/miui_tech_${i}/900/1600`);
+    for(let i=1; i<=50; i++) backgrounds.push(`https://picsum.photos/seed/infinix_style_${i}/900/1600`);
+
+    let phoneQueue = [];
+    let currentIdx = 0;
+    let fixedAmountValue = "0";
+
+    function toggleSettings() {
+        const panel = document.getElementById('bulkSettings');
+        panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function saveAndClose() {
+        const text = document.getElementById('phoneList').value;
+        phoneQueue = text.split('\n').map(n => n.trim()).filter(n => n !== "");
+        fixedAmountValue = document.getElementById('fixedAmount').value || "0";
+        currentIdx = 0;
+        if(phoneQueue.length > 0) {
+            alert(`تم الحفظ بنجاح.`);
+            toggleSettings();
+        } else {
+            alert("يرجى إدخال أرقام.");
+        }
+    }
+
+    // --- وظيفة الساعة بدون الصفر الزائد ---
+    function getRandomTime() {
+        const hours = Math.floor(Math.random() * 12) + 1; 
+        const minutes = String(Math.floor(Math.random() * 60)).padStart(2, '0');
+        const arabicHours = String(hours).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+        const arabicMinutes = String(minutes).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+        return `${arabicHours}:${arabicMinutes}`;
+    }
+
+    // --- وظيفة تغيير السرعة عشوائياً ---
+    function getRandomSpeed() {
+        const units = ['K/s', 'M/s'];
+        const unit = units[Math.floor(Math.random() * units.length)];
+        let val;
+        if(unit === 'K/s') {
+            val = (Math.random() * 900 + 10).toFixed(1); // من 10 لـ 910 K
+        } else {
+            val = (Math.random() * 4 + 0.1).toFixed(1); // من 0.1 لـ 4.1 M
+        }
+        return { val, unit };
+    }
+
+    function handleSendClick() {
+        if (phoneQueue.length === 0) {
+            alert("القائمة فارغة!");
+            toggleSettings();
+            return;
+        }
+
+        if (currentIdx < phoneQueue.length) {
+            const mainMsg = document.getElementById('mainMsg');
+            const phoneFrame = document.getElementById('phoneFrame');
+            const clockTime = document.getElementById('clockTime');
+            const speedVal = document.getElementById('speedVal');
+            const speedUnit = document.getElementById('speedUnit');
+
+            // 1. تغيير النص
+            mainMsg.innerText = `تم تحويل ${fixedAmountValue} جنيه لرقم ${phoneQueue[currentIdx]} مصاريف الخدمة 1 جنيه . اطلب #9* و اشحن 0:مزيد`;
+            
+            // 2. تغيير الخلفية (150 اختيار)
+            const randomBG = backgrounds[Math.floor(Math.random() * backgrounds.length)];
+            phoneFrame.style.backgroundImage = `url('${randomBG}')`;
+
+            // 3. تغيير الساعة (بدون صفر زائد)
+            clockTime.innerText = getRandomTime();
+
+            // 4. تغيير البطارية
+            updateBatteryUI(Math.floor(Math.random() * 90) + 10);
+
+            // 5. ميزة جديدة: تغيير سرعة الشبكة
+            const speedData = getRandomSpeed();
+            speedVal.innerText = speedData.val;
+            speedUnit.innerText = speedData.unit;
+
+            currentIdx++;
+        } else {
+            alert("انتهت القائمة!");
+            currentIdx = 0;
+            toggleSettings();
+        }
+    }
 </script>
 
 </body>
